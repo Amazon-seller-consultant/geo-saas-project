@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: geo_saas_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: geo_user
+      POSTGRES_PASSWORD: geo_password
+      POSTGRES_DB: geo_saas
+    ports:
+      - "5432:5432"
+    volumes:
+      - geo_saas_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: geo_saas_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - geo_saas_redis_data:/data
+
+volumes:
+  geo_saas_postgres_data:
+  geo_saas_redis_data:

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Env files
+.env
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
