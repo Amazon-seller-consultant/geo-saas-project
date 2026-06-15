@@ -7,8 +7,8 @@ from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.user import User
-from app.schemas.audit import AuditCreate, AuditOut
-from app.services.content_auditor import analyze_content, fetch_url_content
+from app.schemas.audit import AuditCreate, AuditOut, Suggestion
+from app.services.content_auditor import analyze_content, check_ai_crawler_access, fetch_url_content
 
 router = APIRouter(prefix="/audits", tags=["audits"])
 
@@ -19,6 +19,7 @@ def create_audit(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AuditLog:
+    blocked_ai_crawlers: list[str] = []
     if payload.url:
         try:
             fetched_title, content = fetch_url_content(payload.url)
@@ -27,11 +28,30 @@ def create_audit(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not fetch URL: {exc}"
             ) from exc
         title = payload.title or fetched_title
+        blocked_ai_crawlers = check_ai_crawler_access(payload.url)
     else:
         content = payload.content or ""
         title = payload.title or "Untitled content"
 
     result = analyze_content(content)
+
+    if blocked_ai_crawlers:
+        result.suggestions.append(
+            Suggestion(
+                category="technical_crawlability",
+                issue=(
+                    "This site's robots.txt blocks AI crawlers ("
+                    + ", ".join(blocked_ai_crawlers)
+                    + ") from accessing this page, so AI search engines and assistants cannot "
+                    "read or cite it."
+                ),
+                recommendation=(
+                    "Update robots.txt to allow these AI crawlers (remove the 'Disallow: /' rule "
+                    "for them, or add explicit 'Allow: /' entries), so this content becomes "
+                    "eligible to be read and cited by AI search engines."
+                ),
+            )
+        )
 
     audit_log = AuditLog(
         user_id=user.id,
