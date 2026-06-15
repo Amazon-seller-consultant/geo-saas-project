@@ -523,7 +523,7 @@ export default function KeywordsPage() {
                 <div className="flex flex-col gap-1.5">
                   <p className="text-sm font-medium text-muted-foreground">Competitors</p>
                   {resultKeyword.competitor_domains.map((domain) => {
-                    const mention = checkResult.competitor_mentions[domain];
+                    const mention = checkResult.competitor_mentions?.[domain];
                     return (
                       <div
                         key={domain}
@@ -570,10 +570,10 @@ export default function KeywordsPage() {
                   <p className="text-sm font-medium text-muted-foreground">
                     What to do to show up for this search
                   </p>
-                  {checkResult.suggestions.length === 0 ? (
+                  {(checkResult.suggestions ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground">No suggestions available.</p>
                   ) : (
-                    checkResult.suggestions.map((suggestion, idx) => (
+                    (checkResult.suggestions ?? []).map((suggestion, idx) => (
                       <div key={idx} className="rounded-lg border p-3">
                         <div className="mb-1 flex items-center gap-2">
                           <Badge variant="outline">{geoCategoryLabel(suggestion.category)}</Badge>
