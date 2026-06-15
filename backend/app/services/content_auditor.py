@@ -81,9 +81,17 @@ def _get_client() -> OpenAI:
     return _client
 
 
+_FETCH_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+}
+
+
 def fetch_url_content(url: str) -> tuple[str, str]:
     """Fetch a URL and extract a title and the page's visible text content."""
-    response = httpx.get(url, follow_redirects=True, timeout=15.0)
+    response = httpx.get(url, follow_redirects=True, timeout=15.0, headers=_FETCH_HEADERS)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
