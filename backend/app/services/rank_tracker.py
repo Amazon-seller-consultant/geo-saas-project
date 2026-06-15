@@ -7,6 +7,7 @@ detecting whether a target domain is mentioned or cited in the response.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timedelta, timezone
 
 from openai import OpenAI
@@ -122,25 +123,34 @@ def _build_snippet(text: str, index: int) -> str:
 
 
 def _detect_mention(
-    output_text: str, citations: list[str], target_domain: str
+    output_text: str, citations: list[str], target: str
 ) -> tuple[bool, int | None, str | None, str | None]:
-    """Check whether `target_domain` appears in the citations or the response text.
+    """Check whether `target` (a domain, brand name, or business name) appears in the
+    citations or anywhere in the response text.
 
     Returns (is_mentioned, citation_rank, source_url, ai_response_snippet).
     """
-    normalized_target = _normalize_domain(target_domain)
+    normalized_target = _normalize_domain(target)
 
     # 1. Check cited sources first - these give us a citation rank and source URL.
-    for rank, url in enumerate(citations, start=1):
-        if normalized_target in _normalize_domain(url):
-            index = output_text.find(normalized_target)
-            snippet = _build_snippet(output_text, index) if index != -1 else output_text[:300]
-            return True, rank, url, snippet
+    #    Only meaningful if `target` looks like a domain (contains a dot).
+    if "." in normalized_target:
+        for rank, url in enumerate(citations, start=1):
+            if normalized_target in _normalize_domain(url):
+                index = output_text.find(normalized_target)
+                snippet = (
+                    _build_snippet(output_text, index) if index != -1 else output_text[:300]
+                )
+                return True, rank, url, snippet
 
-    # 2. Fall back to a plain-text substring check (mention without a citation).
-    index = output_text.lower().find(normalized_target)
-    if index != -1:
-        snippet = _build_snippet(output_text, index)
+    # 2. Fall back to a whole-word/phrase match anywhere in the response text. This is
+    #    what catches a brand or business name being mentioned even when the AI cites
+    #    a third-party site (e.g. a review or travel site) rather than the business's
+    #    own website.
+    pattern = re.compile(rf"\b{re.escape(target.strip())}\b", re.IGNORECASE)
+    match = pattern.search(output_text)
+    if match:
+        snippet = _build_snippet(output_text, match.start())
         return True, None, None, snippet
 
     return False, None, None, None
@@ -157,7 +167,7 @@ def _generate_geo_suggestions(
 
     user_message = (
         f"Search query: {keyword_text}\n"
-        f"User's website (not mentioned/cited): {target_domain}\n\n"
+        f"User's brand/business/domain (not mentioned in the answer): {target_domain}\n\n"
         f"AI assistant's answer:\n{truncated_answer}\n\n"
         f"Sources cited by the AI assistant:\n{cited_sources}"
     )

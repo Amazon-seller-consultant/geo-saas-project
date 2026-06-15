@@ -239,26 +239,32 @@ export default function KeywordsPage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="target_domain">Target domain</Label>
+                <Label htmlFor="target_domain">Your brand, business name, or domain</Label>
                 <Input
                   id="target_domain"
-                  placeholder="example.com"
+                  placeholder="e.g. Atrium Palace Resort or example.com"
                   required
                   value={targetDomain}
                   onChange={(e) => setTargetDomain(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  We&apos;ll check if this is mentioned anywhere in the AI&apos;s answer -
+                  even if it links to a review site or directory instead of your own
+                  website. Use whichever name people would recognize (e.g. your hotel
+                  or business name), not just your domain.
+                </p>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="competitor_domains">Competitor domains (optional)</Label>
+                <Label htmlFor="competitor_domains">Competitor brands or domains (optional)</Label>
                 <Input
                   id="competitor_domains"
-                  placeholder="competitor1.com, competitor2.com"
+                  placeholder="Competitor Hotel Name, competitor2.com"
                   value={competitorDomainsText}
                   onChange={(e) => setCompetitorDomainsText(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Comma-separated. We&apos;ll check whether these domains are also
-                  mentioned, for benchmarking.
+                  Comma-separated. We&apos;ll check whether these are also mentioned,
+                  for benchmarking.
                 </p>
               </div>
               {formError && <p className="text-sm text-destructive">{formError}</p>}
@@ -462,20 +468,22 @@ export default function KeywordsPage() {
           <DialogHeader>
             <DialogTitle>Edit competitors</DialogTitle>
             <DialogDescription>
-              Update the competitor domains tracked for &ldquo;{editKeyword?.keyword_text}
-              &rdquo;.
+              Update the competitor brands or domains tracked for &ldquo;
+              {editKeyword?.keyword_text}&rdquo;.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSaveCompetitors} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="edit_competitor_domains">Competitor domains</Label>
+              <Label htmlFor="edit_competitor_domains">Competitor brands or domains</Label>
               <Input
                 id="edit_competitor_domains"
-                placeholder="competitor1.com, competitor2.com"
+                placeholder="Competitor Hotel Name, competitor2.com"
                 value={editCompetitorsText}
                 onChange={(e) => setEditCompetitorsText(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Comma-separated, up to 10 domains.</p>
+              <p className="text-xs text-muted-foreground">
+                Comma-separated, up to 10. Use brand/business names or domains.
+              </p>
             </div>
             {editError && <p className="text-sm text-destructive">{editError}</p>}
             <DialogFooter>
