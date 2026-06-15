@@ -23,6 +23,11 @@ class RankHistory(Base):
     source_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
     citation_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     competitor_mentions: Mapped[dict] = mapped_column(JSONVariant, nullable=False, default=dict)
+    suggestions_json: Mapped[list] = mapped_column(JSONVariant, nullable=False, default=list)
     checked_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+
+    @property
+    def suggestions(self) -> list:
+        return self.suggestions_json
 
     keyword: Mapped["Keyword"] = relationship(back_populates="rank_history")

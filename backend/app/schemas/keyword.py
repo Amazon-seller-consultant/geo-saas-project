@@ -5,6 +5,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.audit import Suggestion
+
 
 class KeywordCreate(BaseModel):
     keyword_text: str = Field(min_length=1, max_length=500)
@@ -41,4 +43,5 @@ class RankHistoryOut(BaseModel):
     source_url: Optional[str] = None
     citation_rank: Optional[int] = None
     competitor_mentions: dict[str, CompetitorMention] = Field(default_factory=dict)
+    suggestions: list[Suggestion] = Field(default_factory=list)
     checked_at: datetime

@@ -24,6 +24,12 @@ export interface CompetitorMention {
   citation_rank: number | null;
 }
 
+export interface Suggestion {
+  category: string;
+  issue: string;
+  recommendation: string;
+}
+
 export interface RankHistoryOut {
   id: number;
   is_mentioned: boolean;
@@ -31,6 +37,7 @@ export interface RankHistoryOut {
   source_url: string | null;
   citation_rank: number | null;
   competitor_mentions: Record<string, CompetitorMention>;
+  suggestions: Suggestion[];
   checked_at: string;
 }
 
@@ -41,14 +48,9 @@ export interface RankCheckResult {
   ai_response_snippet: string | null;
   source_url: string | null;
   competitor_mentions: Record<string, CompetitorMention>;
+  suggestions: Suggestion[];
   checked_at: string;
   from_cache: boolean;
-}
-
-export interface Suggestion {
-  category: string;
-  issue: string;
-  recommendation: string;
 }
 
 export interface AuditOut {

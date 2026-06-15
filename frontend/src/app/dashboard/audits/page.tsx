@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import * as api from "@/lib/api";
 import { ApiError } from "@/lib/api";
 import type { AuditOut } from "@/lib/types";
+import { geoCategoryLabel } from "@/lib/geo-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -243,17 +244,6 @@ export default function AuditsPage() {
   );
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  answer_first: "Answer-First Structure",
-  entity_clarity: "Entity Clarity",
-  structured_data: "Structured Data",
-  conversational_qa: "Conversational Q&A",
-  eeat_signals: "E-E-A-T Signals",
-  content_depth: "Content Depth",
-  freshness: "Freshness",
-  technical_crawlability: "AI Crawler Access",
-};
-
 function AuditResultDetails({ audit }: { audit: AuditOut }) {
   const suggestions = audit.suggestions_json?.suggestions ?? [];
 
@@ -273,9 +263,7 @@ function AuditResultDetails({ audit }: { audit: AuditOut }) {
           {suggestions.map((suggestion, idx) => (
             <div key={idx} className="rounded-lg border p-3">
               <div className="mb-1 flex items-center gap-2">
-                <Badge variant="outline">
-                  {CATEGORY_LABELS[suggestion.category] ?? suggestion.category}
-                </Badge>
+                <Badge variant="outline">{geoCategoryLabel(suggestion.category)}</Badge>
               </div>
               <p className="text-sm font-medium">{suggestion.issue}</p>
               <p className="text-sm text-muted-foreground">{suggestion.recommendation}</p>

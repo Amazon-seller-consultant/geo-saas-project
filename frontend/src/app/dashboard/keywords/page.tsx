@@ -5,7 +5,8 @@ import type { FormEvent } from "react";
 import { useAuth } from "@/lib/auth-context";
 import * as api from "@/lib/api";
 import { ApiError } from "@/lib/api";
-import type { KeywordOut, RankHistoryOut } from "@/lib/types";
+import type { KeywordOut, RankCheckResult, RankHistoryOut } from "@/lib/types";
+import { geoCategoryLabel } from "@/lib/geo-categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,6 +74,9 @@ export default function KeywordsPage() {
   const [historyKeyword, setHistoryKeyword] = useState<KeywordOut | null>(null);
   const [history, setHistory] = useState<RankHistoryOut[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [resultKeyword, setResultKeyword] = useState<KeywordOut | null>(null);
+  const [checkResult, setCheckResult] = useState<RankCheckResult | null>(null);
 
   const [editKeyword, setEditKeyword] = useState<KeywordOut | null>(null);
   const [editCompetitorsText, setEditCompetitorsText] = useState("");
@@ -159,15 +163,8 @@ export default function KeywordsPage() {
           k.id === keyword.id ? { ...k, last_checked: result.checked_at } : k
         )
       );
-      toast.success(
-        result.is_mentioned
-          ? `${keyword.target_domain} was mentioned${
-              result.citation_rank ? ` (citation #${result.citation_rank})` : ""
-            }${result.from_cache ? " (cached)" : ""}`
-          : `${keyword.target_domain} was not mentioned${
-              result.from_cache ? " (cached)" : ""
-            }`
-      );
+      setResultKeyword(keyword);
+      setCheckResult(result);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to check keyword");
     } finally {
@@ -488,6 +485,108 @@ export default function KeywordsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!resultKeyword}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResultKeyword(null);
+            setCheckResult(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Check result for &ldquo;{resultKeyword?.keyword_text}&rdquo;</DialogTitle>
+            <DialogDescription>
+              {checkResult?.from_cache
+                ? "Showing the most recent cached result."
+                : "Fresh result from an AI search just now."}
+            </DialogDescription>
+          </DialogHeader>
+          {checkResult && resultKeyword && (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm font-medium">{resultKeyword.target_domain}</span>
+                <Badge variant={checkResult.is_mentioned ? "default" : "secondary"}>
+                  {checkResult.is_mentioned
+                    ? `Mentioned${
+                        checkResult.citation_rank ? ` (citation #${checkResult.citation_rank})` : ""
+                      }`
+                    : "Not mentioned"}
+                </Badge>
+              </div>
+
+              {resultKeyword.competitor_domains.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-sm font-medium text-muted-foreground">Competitors</p>
+                  {resultKeyword.competitor_domains.map((domain) => {
+                    const mention = checkResult.competitor_mentions[domain];
+                    return (
+                      <div
+                        key={domain}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <span className="text-sm">{domain}</span>
+                        <Badge variant={mention?.is_mentioned ? "default" : "secondary"}>
+                          {mention?.is_mentioned
+                            ? `Mentioned${
+                                mention.citation_rank ? ` (citation #${mention.citation_rank})` : ""
+                              }`
+                            : "Not mentioned"}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {checkResult.ai_response_snippet && (
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    What the AI said
+                  </p>
+                  <p className="rounded-lg border bg-muted/30 p-3 text-sm">
+                    &ldquo;{checkResult.ai_response_snippet}&rdquo;
+                  </p>
+                </div>
+              )}
+
+              {checkResult.source_url && (
+                <a
+                  href={checkResult.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline"
+                >
+                  {checkResult.source_url}
+                </a>
+              )}
+
+              {!checkResult.is_mentioned && (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    What to do to show up for this search
+                  </p>
+                  {checkResult.suggestions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No suggestions available.</p>
+                  ) : (
+                    checkResult.suggestions.map((suggestion, idx) => (
+                      <div key={idx} className="rounded-lg border p-3">
+                        <div className="mb-1 flex items-center gap-2">
+                          <Badge variant="outline">{geoCategoryLabel(suggestion.category)}</Badge>
+                        </div>
+                        <p className="text-sm font-medium">{suggestion.issue}</p>
+                        <p className="text-sm text-muted-foreground">{suggestion.recommendation}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

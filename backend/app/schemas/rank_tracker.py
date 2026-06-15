@@ -5,6 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.audit import Suggestion
 from app.schemas.keyword import CompetitorMention
 
 
@@ -17,5 +18,6 @@ class RankCheckResult(BaseModel):
     ai_response_snippet: Optional[str] = None
     source_url: Optional[str] = None
     competitor_mentions: dict[str, CompetitorMention] = Field(default_factory=dict)
+    suggestions: list[Suggestion] = Field(default_factory=list)
     checked_at: datetime
     from_cache: bool = False
